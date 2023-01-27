@@ -51,7 +51,8 @@ void loop()
     int sensorWeightedAverage = WeightedAverage(sensorValues);
 
     int steeringAngle = ((sensorWeightedAverage - 45) * 3.3 + SWA);
-    sendDataToArduino(slowSpeed, slowSpeed, steeringAngle);
+    int speed = 140 - 2.8 * sqrt((sensorWeightedAverage - 45) * (sensorWeightedAverage - 45));
+    sendDataToArduino(speed, speed, steeringAngle);
 }
 
 void displaySensorValues()
