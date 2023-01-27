@@ -1,11 +1,14 @@
 // Potentiometer is connected to GPIO 34 (Analog ADC1_CH6)
 const int pin1 = 36;
-const int pin2 = 37;
+const int pin2 = 25;
 const int pin3 = 34;
 const int pin4 = 35;
 const int pin5 = 32;
 const int pin6 = 33;
 const int pins[6] = {pin1, pin2, pin3, pin4, pin5, pin6};
+int sensorDistance[6] = {9, 24, 39, 54, 79, 84};
+int totalDistance = 289;
+int sensorValues[6];
 
 // variable for storing the potentiometer value
 int S1 = 0;
@@ -20,8 +23,8 @@ int S6 = 0;
 #include <EasyUltrasonic.h>
 
 #include <MPU9250_asukiaaa.h>
-int slowSpeed = 120;
-int slowSpeedneg = -120;
+int slowSpeed = 90;
+int slowSpeedneg = -100;
 int highSpeed = 255;
 int highSpeedneg = -255;
 #define SWA 85
@@ -39,33 +42,26 @@ void setup()
 
 void loop()
 {
-    S3 = analogRead(pins[2]);
-    S4 = analogRead(pins[3]);
-    int difference = (S3 - S4) / 100;
-    int steeringAngle = 0;
-    if (S3 > S4)
+    getSensorValues();
+    int range = findRange();
+    if (range < 1500)
     {
-        steeringAngle = SWA - difference;
+        findTheLine();
     }
-    else if (S3 < S4)
-    {
-        steeringAngle = SWA - difference;
-    }
-    else
-    {
-        steeringAngle = SWA;
-    }
+    int sensorWeightedAverage = WeightedAverage(sensorValues);
+
+    int steeringAngle = ((sensorWeightedAverage - 45) * 3.3 + SWA);
     sendDataToArduino(slowSpeed, slowSpeed, steeringAngle);
 }
 
 void displaySensorValues()
 {
-    S1 = analogRead(pins[0]);
-    S2 = analogRead(pins[1]);
-    S3 = analogRead(pins[2]);
-    S4 = analogRead(pins[3]);
-    S5 = analogRead(pins[4]);
-    S6 = analogRead(pins[5]);
+    S1 = 5000 - analogRead(pins[0]);
+    S2 = 5000 - analogRead(pins[1]);
+    S3 = 5000 - analogRead(pins[2]);
+    S4 = 5000 - analogRead(pins[3]);
+    S5 = 5000 - analogRead(pins[4]);
+    S6 = 5000 - analogRead(pins[5]);
     Serial.print(S1);
     Serial.print(" ");
     Serial.print(S2);
@@ -78,6 +74,76 @@ void displaySensorValues()
     Serial.print(" ");
     Serial.print(S6);
     Serial.println();
+}
+
+int WeightedAverage(int *sensorValues)
+{
+    int sum = 0;
+    for (int i = 0; i < 6; i++)
+    {
+        sum += sensorValues[i] * sensorDistance[i];
+    }
+
+    return sum / (Sum(sensorValues[0], sensorValues[1], sensorValues[2], sensorValues[3], sensorValues[4], sensorValues[5]));
+}
+
+int *getSensorValues()
+{
+    for (int i = 0; i < 6; i++)
+    {
+        sensorValues[i] = 5000 - analogRead(pins[i]);
+    }
+}
+
+int Sum(int a, int b, int c, int d, int e, int f)
+{
+    return a + b + c + d + e + f;
+}
+
+int checkForLine()
+{
+    for (int i = 0; i < 6; i++)
+    {
+        if (sensorValues[i] > 1000)
+        {
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+}
+
+int findRange()
+{
+    int min = sensorValues[0];
+    int max = min;
+    for (int i = 0; i < 6; i++)
+    {
+        if (sensorValues[i] < min)
+        {
+            min = sensorValues[i];
+        }
+        if (sensorValues[i] > max)
+        {
+            max = sensorValues[i];
+        }
+    }
+    return (max - min);
+}
+
+void findTheLine()
+{
+    // find the range of the sensorvalues
+
+    sendDataToArduino(slowSpeedneg, slowSpeedneg, SWA);
+    delay(300);
+    while (findRange() < 1000)
+    {
+        getSensorValues();
+        sendDataToArduino(slowSpeed, slowSpeed, SWA);
+    }
 }
 
 void sendDataToArduino(int leftMotor, int rightMotor, int steeringAngle)
