@@ -20,7 +20,7 @@ int S6 = 0;
 #include <EasyUltrasonic.h>
 
 #include <MPU9250_asukiaaa.h>
-int slowSpeed = 120;
+int slowSpeed = 80;
 int slowSpeedneg = -120;
 int highSpeed = 255;
 int highSpeedneg = -255;
@@ -45,11 +45,11 @@ void loop()
     int steeringAngle = 0;
     if (S3 > S4)
     {
-        steeringAngle = SWA - difference;
+        steeringAngle = SWA + difference;
     }
     else if (S3 < S4)
     {
-        steeringAngle = SWA - difference;
+        steeringAngle = SWA + difference;
     }
     else
     {
