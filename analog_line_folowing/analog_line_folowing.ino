@@ -20,10 +20,12 @@ int S6 = 0;
 #include <EasyUltrasonic.h>
 
 #include <MPU9250_asukiaaa.h>
+// vehicle speed constants
 int slowSpeed = 80;
 int slowSpeedneg = -120;
 int highSpeed = 255;
 int highSpeedneg = -255;
+// value for strait steering angle
 #define SWA 85
 
 // arduino address
@@ -39,25 +41,17 @@ void setup()
 
 void loop()
 {
+    // gets up to date values for the 2 sensors
     S3 = analogRead(pins[2]);
     S4 = analogRead(pins[3]);
+    // works out the difference between the 2 sensors and divides it by 100
     int difference = (S3 - S4) / 100;
     int steeringAngle = 0;
-    if (S3 > S4)
-    {
-        steeringAngle = SWA + difference;
-    }
-    else if (S3 < S4)
-    {
-        steeringAngle = SWA + difference;
-    }
-    else
-    {
-        steeringAngle = SWA;
-    }
+    steeringAngle = SWA + difference;
     sendDataToArduino(slowSpeed, slowSpeed, steeringAngle);
 }
 
+// function for debugging sensor values
 void displaySensorValues()
 {
     S1 = analogRead(pins[0]);
@@ -80,6 +74,7 @@ void displaySensorValues()
     Serial.println();
 }
 
+// function for sending data to arduino
 void sendDataToArduino(int leftMotor, int rightMotor, int steeringAngle)
 {
     if (leftMotor > 255)
