@@ -42,21 +42,27 @@ void setup()
 
 void loop()
 {
+    // records the most recent sensor value to an array
     getSensorValues();
+    // finds the range of sensor values
     int range = findRange();
+    // if the range is less than 1500, the car is not on the line and so the find the line function is run
     if (range < 1500)
     {
         findTheLine();
     }
+    // once the line is found then the weighted average is calculated this is the value where the line is compared to a point on the sensor bread board
     int sensorWeightedAverage = WeightedAverage(sensorValues);
-
+    // sets teh steering angle based on the sensor weighted average - 45 which is the distance from point to the center this gives an angle. this angle is then added to the SWA(the angle at which the steering is strait to get a steering angle that will follow the line) 
     int steeringAngle = ((sensorWeightedAverage - 45) * 3.3 + SWA);
+    // sets the speed based on the distance from the center of hte lineline. the closer the center of the line the faster the car will go
     int speed = 140 - 2.8 * sqrt((sensorWeightedAverage - 45) * (sensorWeightedAverage - 45));
     sendDataToArduino(speed, speed, steeringAngle);
 }
 
 void displaySensorValues()
 {
+    // used for debugging
     S1 = 5000 - analogRead(pins[0]);
     S2 = 5000 - analogRead(pins[1]);
     S3 = 5000 - analogRead(pins[2]);
@@ -163,3 +169,4 @@ void sendDataToArduino(int leftMotor, int rightMotor, int steeringAngle)
     Wire.endTransmission(); // stop transmitting
     delay(100);
 }
+
